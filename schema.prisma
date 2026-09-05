@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  password      String       // Hashed password
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+  
+  invitations   Invitation[]
+  
+  @@map("users")
+}
+
+// ============================================
+// CORE INVITATION TABLE
+// ============================================
+
+model Invitation {
+  id              String          @id @default(cuid())
+  user_id         String
+  slug            String          @unique // Unique URL identifier (e.g., 'romeo-juliet')
+  title           String          // e.g., "The Wedding of Romeo & Juliet"
+  theme_template_id String        // Reference to ThemeTemplate
+  music_library_id String?        // Reference to MusicLibrary (optional)
+  is_active       Boolean         @default(true)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+  
+  // Relations
+  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  theme_template  ThemeTemplate   @relation(fields: [theme_template_id], references: [id])
+  music_track     MusicLibrary?   @relation(fields: [music_library_id], references: [id])
+  couple_profiles CoupleProfile[]
+  events          Event[]
+  gallery_items   Gallery[]
+  digital_gifts   DigitalGift[]
+  guest_book      GuestBook[]
+  quotes          Quote[]
+  love_story      LoveStory?
+  
+  @@index([slug])
+  @@index([user_id])
+  @@index([theme_template_id])
+  @@map("invitations")
+}
+
+// ============================================
+// COUPLE PROFILES (Mempelai)
+// ============================================
+
+model CoupleProfile {
+  id                String      @id @default(cuid())
+  invitation_id     String
+  full_name         String      // Nama Lengkap
+  nickname          String?     // Nama Panggilan
+  father_name       String?     // Nama Ayah
+  mother_name       String?     // Nama Ibu
+  instagram_link    String?     // Instagram URL
+  photo_url         String?     // Foto Profil URL
+  order             Int         // 1 = Groom (Pria), 2 = Bride (Wanita) - determines display order
+  role              String      @default("groom") // "groom" or "bride" for easier querying
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  
+  // Relations
+  invitation        Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, order])
+  @@map("couple_profiles")
+}
+
+// ============================================
+// EVENTS (Acara)
+// ============================================
+
+model Event {
+  id            String      @id @default(cuid())
+  invitation_id String
+  event_name    String      // e.g., "Akad Nikah", "Resepsi", "Unduh Mantu"
+  date_start    DateTime    // Start date and time
+  date_end      DateTime?   // End date and time (optional)
+  location_name String      // e.g., "Hotel Majapahit"
+  address       String      // Full text address
+  map_link      String?     // Google Maps URL
+  timezone      String      @default("WIB") // WIB/WITA/WIT
+  order         Int         @default(0) // Display order
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  // Relations
+  invitation    Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, order])
+  @@map("events")
+}
+
+// ============================================
+// GALLERY (Galeri)
+// ============================================
+
+model Gallery {
+  id            String      @id @default(cuid())
+  invitation_id String
+  url           String      // Image/Video URL
+  caption       String?     // Optional caption
+  type          String      @default("photo") // "photo" or "video"
+  order         Int         @default(0) // Display order
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  // Relations
+  invitation    Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, order])
+  @@map("gallery")
+}
+
+// ============================================
+// DIGITAL GIFTS (Amplop Digital)
+// ============================================
+
+model DigitalGift {
+  id                  String      @id @default(cuid())
+  invitation_id       String
+  bank_name           String      // e.g., "BCA", "Mandiri", "Dana"
+  account_number      String      // Bank account number
+  account_holder_name  String      // Account holder name
+  qr_code_url         String?     // Optional QR code image URL
+  order               Int         @default(0) // Display order
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+  
+  // Relations
+  invitation          Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, order])
+  @@map("digital_gifts")
+}
+
+// ============================================
+// GUEST BOOK (Ucapan & RSVP)
+// ============================================
+
+model GuestBook {
+  id                String      @id @default(cuid())
+  invitation_id     String
+  guest_name        String      // Visitor's name
+  message           String      // Wish/Message content
+  attendance_status String?     // "Hadir", "Tidak", "Ragu", or null
+  email             String?     // Optional email
+  phone             String?     // Optional phone number
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  
+  // Relations
+  invitation        Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, created_at])
+  @@map("guest_book")
+}
+
+// ============================================
+// QUOTES (Quotes/Pembuka)
+// ============================================
+
+model Quote {
+  id            String      @id @default(cuid())
+  invitation_id String
+  title         String?     // Optional title
+  body          String      // Quote text
+  author        String?     // Optional author name
+  order         Int         @default(0) // Display order (if multiple quotes)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  // Relations
+  invitation    Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@index([invitation_id, order])
+  @@map("quotes")
+}
+
+// ============================================
+// LOVE STORY (Cerita Cinta)
+// ============================================
+
+model LoveStory {
+  id            String      @id @default(cuid())
+  invitation_id String      @unique // One-to-One relationship
+  title         String?     // Optional title
+  body          String      // Story content (can be HTML/markdown)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  // Relations
+  invitation    Invitation  @relation(fields: [invitation_id], references: [id], onDelete: Cascade)
+  
+  @@index([invitation_id])
+  @@map("love_story")
+}
+
+// ============================================
+// SYSTEM ASSETS - MASTER DATA/LIBRARY
+// ============================================
+
+// Theme Templates - Available design templates
+model ThemeTemplate {
+  id              String      @id @default(cuid())
+  name            String      @unique // e.g., "Red Beige", "Blue Ocean", "Javanese Classic"
+  description     String?     // Template description
+  thumbnail_url   String      // Preview image URL
+  ejs_file_path   String      // Path to EJS template file
+  style_config_json Json?     // JSON configuration for styles/colors
+  seo_config_json Json?       // JSON configuration for SEO meta tags
+  category        String?     // e.g., "modern", "classic", "traditional"
+  is_active       Boolean     @default(true)
+  price           Decimal?    @default(0) // Optional pricing
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  
+  // Relations
+  invitations     Invitation[]
+  
+  @@index([name])
+  @@index([category])
+  @@map("theme_templates")
+}
+
+// Music Library - Background music options
+model MusicLibrary {
+  id              String      @id @default(cuid())
+  title           String      // Song title
+  artist          String?     // Artist name
+  audio_url       String      // Audio file URL
+  thumbnail_url   String?     // Album cover/thumbnail URL
+  category        String?     // e.g., "romantic", "classical", "modern", "instrumental"
+  duration        Int?        // Duration in seconds
+  is_active       Boolean     @default(true)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  
+  // Relations
+  invitations     Invitation[]
+  
+  @@index([category])
+  @@index([title])
+  @@map("music_library")
+}
+
+// Digital Assets - Draggable items for editor (stickers, shapes, frames)
+model DigitalAsset {
+  id              String      @id @default(cuid())
+  name            String      // Asset name
+  type            String      // "sticker", "shape", "frame", "decoration", "icon"
+  url             String      // Asset file URL
+  thumbnail_url   String?     // Thumbnail preview URL
+  category        String?     // e.g., "flowers", "hearts", "geometric", "frames"
+  tags            Json?       // JSON array of tags for searchability (MySQL compatible)
+  is_premium      Boolean     @default(false) // Premium assets
+  is_active       Boolean     @default(true)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  
+  @@index([type])
+  @@index([category])
+  @@index([is_premium])
+  @@map("digital_assets")
+}
+

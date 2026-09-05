@@ -1,0 +1,52 @@
+{
+  "name": "undangantothepoint",
+  "version": "1.0.0",
+  "description": "Digital Invitation Platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "ts-node scripts/reset-db.ts",
+    "db:migrate:reset": "prisma migrate reset",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.4",
+    "@monaco-editor/react": "^4.7.0",
+    "@prisma/client": "^5.0.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "adm-zip": "^0.5.16",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.344.0",
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.3",
+    "react-hot-toast": "^2.6.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "tailwind-merge": "^2.2.0",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "prisma": "^5.0.0",
+    "tailwindcss": "^3.4.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
